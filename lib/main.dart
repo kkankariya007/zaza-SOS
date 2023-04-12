@@ -3,14 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_sms/flutter_sms.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
-// import 'package:flutter_contacts/flutter_contacts.dart' hide Contact;
-// import 'package:contacts_service/contacts_service.dart';
-// import 'package:contact_picker/contact_picker.dart';
-import 'package:fluttercontactpicker/fluttercontactpicker.dart';
+import 'package:contacts_service/contacts_service.dart';
 
 
-// final ContactPicker _contactPicker = ContactPicker();
-
+List<Contact> contacts =  ContactsService.getContacts() as List<Contact>;
 
 
 void main() {
@@ -64,6 +60,62 @@ Future<String> _getCurrentLocation() async {
   }
 }
 
+class MyWidget extends StatefulWidget {
+  @override
+  _MyWidgetState createState() => _MyWidgetState();
+}
+
+Set<Contact> _selectedContacts = {};
+
+
+class _MyWidgetState extends State<MyWidget> {
+  List<Contact> contacts = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadContacts();
+  }
+
+  Future<void> _loadContacts() async {
+    List<Contact> loadedContacts = await ContactsService.getContacts();
+    setState(() {
+      contacts = loadedContacts;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Select Contacts'),
+      ),
+      body: ListView.builder(
+        itemCount: contacts.length,
+        itemBuilder: (BuildContext context, int index) {
+          Contact contact = contacts[index];
+          return ListTile(
+            leading: CircleAvatar(),
+            title: Text(contact.displayName ?? ''),
+            subtitle: Text(contact.phones?.first.value ?? ''),
+            trailing: Checkbox(
+              value: _selectedContacts.contains(contact),
+              onChanged: (bool? value) {
+                setState(() {
+                  if (value != null && value) {
+                    _selectedContacts.add(contact);
+                  } else {
+                    _selectedContacts.remove(contact);
+                  }
+                });
+              },
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
 
 
 
@@ -71,17 +123,7 @@ Future<String> _getCurrentLocation() async {
 
 class _SOSState extends State<SOS> {
 
-  Future<void> _selectContacts() async {
-    List<Contact> selectedContacts =
-    (await _contactPicker.selectContact()as List<Contact>;//multiSelect: true)) as List<Contact>;
-    List<String> selectedNumbers = selectedContacts
-        .map((contact) =>
-    contact.phoneNumber?.number.toString() ?? '') // filter out empty numbers
-        .toList();
-    setState(() {
-      _selectedNumbers = selectedNumbers;
-    });
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -139,11 +181,19 @@ class _SOSState extends State<SOS> {
 
           height: 30,
           child: MaterialButton(
+
             onPressed:() async {
-              await _selectContacts();
-              print("{Hello");
-              for (String name in _selectedNumbers) {
-              print(name);   }    },
+             await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) =>  MyWidget()),
+              );
+
+              print(_selectedContacts.toString());
+
+                // Do something with the selected contacts
+
+            },
+
             child: Text("Choose contacts"),
             color: Colors.lightGreenAccent,
 
