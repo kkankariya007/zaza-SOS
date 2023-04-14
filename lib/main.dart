@@ -3,10 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_sms/flutter_sms.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
-import 'package:contacts_service/contacts_service.dart';
-
-
-List<Contact> contacts =  ContactsService.getContacts() as List<Contact>;
+import 'package:fast_contacts/fast_contacts.dart';
 
 
 void main() {
@@ -15,6 +12,9 @@ void main() {
     home:SOS(),
   ));
 }
+
+
+
 
 class SOS extends StatefulWidget {
   const SOS({Key? key}) : super(key: key);
@@ -60,70 +60,7 @@ Future<String> _getCurrentLocation() async {
   }
 }
 
-class MyWidget extends StatefulWidget {
-  @override
-  _MyWidgetState createState() => _MyWidgetState();
-}
-
-Set<Contact> _selectedContacts = {};
-
-
-class _MyWidgetState extends State<MyWidget> {
-  List<Contact> contacts = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _loadContacts();
-  }
-
-  Future<void> _loadContacts() async {
-    List<Contact> loadedContacts = await ContactsService.getContacts();
-    setState(() {
-      contacts = loadedContacts;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Select Contacts'),
-      ),
-      body: ListView.builder(
-        itemCount: contacts.length,
-        itemBuilder: (BuildContext context, int index) {
-          Contact contact = contacts[index];
-          return ListTile(
-            leading: CircleAvatar(),
-            title: Text(contact.displayName ?? ''),
-            subtitle: Text(contact.phones?.first.value ?? ''),
-            trailing: Checkbox(
-              value: _selectedContacts.contains(contact),
-              onChanged: (bool? value) {
-                setState(() {
-                  if (value != null && value) {
-                    _selectedContacts.add(contact);
-                  } else {
-                    _selectedContacts.remove(contact);
-                  }
-                });
-              },
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-
-
-
-
-
 class _SOSState extends State<SOS> {
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -148,10 +85,11 @@ class _SOSState extends State<SOS> {
       ),
       ),
 
-      child:Center(
-      child: Column(mainAxisAlignment: MainAxisAlignment.start,crossAxisAlignment: CrossAxisAlignment.center,
-      children: <Widget>[
-      SizedBox(height: 250.0),
+        child:Center(
+        child: Column(mainAxisAlignment: MainAxisAlignment.start,crossAxisAlignment: CrossAxisAlignment.center,
+        children: <Widget>[
+
+        SizedBox(height: 250.0),
 
         RawMaterialButton(
         constraints: BoxConstraints.tight(Size(300,300)),
@@ -168,43 +106,51 @@ class _SOSState extends State<SOS> {
 
           onPressed: () async {
           String link= await _getCurrentLocation();
-          print(link);
-           await sendSSMS(link);
-
+          await sendSSMS(link);
           },
           elevation: 10.0,
           padding: const EdgeInsets.all(30.0),
           shape: const CircleBorder(),
-    ),
-        SizedBox(height: 50,),
-        SizedBox(
+        ),
+          SizedBox(height: 30,),
 
+          MaterialButton(
+            onPressed: () async {
+              final List<Contact> contacts = await FastContacts.pickContacts(
+                context,
+                multiple: true,
+              );
+              print(contacts);
+            },
+            child: Text('Select multiple contacts'),
+          ),
+
+        SizedBox(height: 150,),
+
+          SizedBox(
           height: 30,
           child: MaterialButton(
 
             onPressed:() async {
-             await Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) =>  MyWidget()),
-              );
-
-              print(_selectedContacts.toString());
+             // await Navigator.push(
+             //   context,
+             //   MaterialPageRoute(
+             //     builder: (BuildContext context) => HomePage()
+                   // selectedContacts: _selectedContacts,
+             //
+             //   ),
+             // );
+             //  // await HomePage();
+              // print(_selectedContacts.toString());
 
                 // Do something with the selected contacts
-
             },
-
             child: Text("Choose contacts"),
             color: Colors.lightGreenAccent,
-
-
           ),
         ),
-
-
-
                       ],
-                  ),
+                    ),
                   ),
             ),
       ),
