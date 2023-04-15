@@ -1,18 +1,40 @@
 import 'dart:async';
+import 'package:contact_picker/contact_picker.dart';
+// import 'package:contacts_service/contacts_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_sms/flutter_sms.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
-import 'package:fast_contacts/fast_contacts.dart';
+// import 'package:contacts_service/contacts_service.dart';
+import 'package:permission_handler/permission_handler.dart';
 
-
+String? _ch;
 void main() {
 
   runApp(const MaterialApp(
     home:SOS(),
   ));
 }
-
+//
+// List<Contact> pickedContacts = [];
+//
+// Future<Contact> pickContact() async {
+//
+//   var status = await Permission.contacts.status;
+//   if (status.isDenied) {
+//     await Permission.contacts.request();
+//   }
+//
+//   // Get all contacts on the device
+//   Iterable<Contact> contacts =
+//   await ContactsService.getContacts(withThumbnails: false);
+//
+//   // Display the contact picker dialog
+//   Contact contact = (await ContactsService.getContacts()) as Contact;
+//
+//   return contact;
+// }
+//
 
 
 
@@ -60,7 +82,13 @@ Future<String> _getCurrentLocation() async {
   }
 }
 
+
+
 class _SOSState extends State<SOS> {
+
+  final ContactPicker _contactPicker = new ContactPicker();
+  Contact? _contact;
+  PhoneNumber? _ph;
 
   @override
   Widget build(BuildContext context) {
@@ -112,44 +140,28 @@ class _SOSState extends State<SOS> {
           padding: const EdgeInsets.all(30.0),
           shape: const CircleBorder(),
         ),
+
           SizedBox(height: 30,),
-
           MaterialButton(
-            onPressed: () async {
-              final List<Contact> contacts = await FastContacts.pickContacts(
-                context,
-                multiple: true,
-              );
-              print(contacts);
-            },
-            child: Text('Select multiple contacts'),
+              onPressed: () async {
+                Contact contact= await _contactPicker.selectContact();
+                setState(() {
+                  _contact=contact;
+                  _ch=contact.phoneNumber.number;
+                });
+                print(_ch);
+          },
+            color: Colors.greenAccent,
           ),
 
-        SizedBox(height: 150,),
-
-          SizedBox(
-          height: 30,
-          child: MaterialButton(
-
-            onPressed:() async {
-             // await Navigator.push(
-             //   context,
-             //   MaterialPageRoute(
-             //     builder: (BuildContext context) => HomePage()
-                   // selectedContacts: _selectedContacts,
-             //
-             //   ),
-             // );
-             //  // await HomePage();
-              // print(_selectedContacts.toString());
-
-                // Do something with the selected contacts
-            },
-            child: Text("Choose contacts"),
-            color: Colors.lightGreenAccent,
+          new Text(
+            _contact == null ? 'No contact selected.' : _contact.toString(),
           ),
-        ),
-                      ],
+
+          new Text(_ch.toString().replaceAll(' ','*')),
+
+
+        ],
                     ),
                   ),
             ),
